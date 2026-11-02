@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Output Program{% endblock %}
+
+{% block content %}
+<div class="page-eyebrow">Langkah 04</div>
+<h1 class="page-title">Output Program</h1>
+<p class="page-desc">
+  Ringkasan akhir hasil analisis: aturan asosiasi (association rules) terpilih per stasiun,
+  statistik retensi data setelah preprocessing, dan opsi unduh hasil.
+</p>
+
+<div class="card-panel">
+  <h2>Kombinasi Parameter FP-Growth yang Dipakai</h2>
+  {% if support_final is not none %}
+    <div class="chip-row">
+      <span class="chip good">min_support = {{ support_final }}</span>
+      <span class="chip good">min_confidence = {{ confidence_final }}</span>
+    </div>
+    <p class="subtitle mt-2">Kombinasi tertinggi yang tetap menghasilkan aturan valid (lift &gt; 1) di seluruh stasiun.</p>
+  {% else %}
+    <p class="text-danger">Tidak ditemukan kombinasi yang valid di semua stasiun. Lihat halaman Analisis Data untuk detail.</p>
+  {% endif %}
+</div>
+
+<div class="card-panel">
+  <h2>Jumlah Rule per Stasiun</h2>
+  <div class="table-wrap">{{ tabel_jumlah_rule_html | safe }}</div>
+</div>
+
+<div class="card-panel">
+  <h2>Retensi Data Setelah Preprocessing</h2>
+  <p class="subtitle">Perbandingan jumlah baris data sebelum vs sesudah penanganan missing value &amp; outlier.</p>
+  <div class="table-wrap">{{ tabel_retensi_html | safe }}</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- RUMUSAN MASALAH 1 — POLA ASOSIASI METEOROLOGI & POLUTAN       -->
+<!-- ============================================================ -->
+
+<div class="section-divider">
+  <span class="num">1</span>
+  <span class="title">Pola Asosiasi Meteorologi &amp; Polutan terhadap Kualitas Udara</span>
+  <span class="line"></span>
+</div>
+
+{% if gambar_pola_asosiasi %}
+<div class="card-panel">
+  <h2>Kondisi yang Paling Sering Membentuk Aturan Asosiasi</h2>
+  <p class="subtitle">
+    Menjawab: bagaimana pola asosiasi antara kondisi meteorologi dan parameter polutan terhadap
+    kualitas udara di DKI Jakarta. Semakin sering suatu kondisi (biru = polutan, hijau = meteorologi)
+    muncul sebagai antecedent pada aturan final, semakin konsisten kondisi itu berasosiasi dengan
+    kategori ISPU tertentu, digabung dari seluruh stasiun.
+  </p>
+  {{ gambar_pola_asosiasi | safe }}
+</div>
+{% else %}
+<div class="card-panel">
+  <p class="text-muted fst-italic">Tidak ada aturan pada kombinasi terpilih untuk divisualisasikan.</p>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- TINJAUAN AWAL — KORELASI CUACA & POLUTAN PER STASIUN (dari EDA) -->
+<!-- ============================================================ -->
+
+{% if gambar_hubungan_cuaca_polutan %}
+<div class="card-panel">
+  <h2>Tinjauan Awal: Korelasi Cuaca &amp; Polutan per Stasiun</h2>
+  <p class="subtitle">
+    Pendamping hasil FP-Growth di atas — bukan hubungan sebab-akibat, hanya kecenderungan linear
+    (korelasi r) tiap hari, dari data bersih pasca-preprocessing. Defaultnya PM2.5 karena partikelnya
+    paling halus (≤2,5 mikron) dan paling umum jadi acuan utama kualitas udara, tapi polutan lain
+    (PM10, SO2, CO, O3, NO2) serta variabel cuaca lain bisa dipilih lewat dropdown di tiap grafik.
+  </p>
+  {% for stasiun in daftar_stasiun %}
+    {% if gambar_hubungan_cuaca_polutan.get(stasiun) %}
+    <h3 class="mt-3">{{ stasiun }}</h3>
+    {{ gambar_hubungan_cuaca_polutan[stasiun] | safe }}
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- RUMUSAN MASALAH 2 — ATURAN ASOSIASI TERKUAT                   -->
+<!-- ============================================================ -->
+
+<div class="section-divider">
+  <span class="num">2</span>
+  <span class="title">Aturan Asosiasi Terkuat (Support, Confidence, Lift)</span>
+  <span class="line"></span>
+</div>
+
+{% if gambar_peta_kekuatan_rules %}
+<div class="card-panel">
+  <h2>Peta Kekuatan Seluruh Aturan Asosiasi</h2>
+  <p class="subtitle">
+    Tiap titik = satu aturan asosiasi. Posisi kanan-atas = Support &amp; Confidence tinggi
+    (sering terjadi dan cukup dapat diandalkan), ukuran titik = Lift (makin besar, makin kuat
+    korelasinya dibanding kebetulan). Warna membedakan stasiun.
+  </p>
+  {{ gambar_peta_kekuatan_rules | safe }}
+</div>
+{% endif %}
+
+{% if gambar_top_rules %}
+<div class="card-panel">
+  <h2>10 Aturan Asosiasi dengan Lift Tertinggi</h2>
+  <p class="subtitle">
+    Ini jawaban langsung untuk "aturan asosiasi terkuat" — diurutkan dari Lift tertinggi,
+    digabung dari seluruh stasiun. Arahkan kursor ke tiap bar untuk melihat nilai Support &amp; Confidence-nya.
+  </p>
+  {{ gambar_top_rules | safe }}
+</div>
+{% endif %}
+
+<div class="section-divider">
+  <span class="num">✓</span>
+  <span class="title">Aturan Asosiasi Terpilih per Stasiun</span>
+  <span class="line"></span>
+</div>
+
+<div class="download-row mb-3">
+  <a href="{{ url_for('download_rules') }}" class="btn-download">
+    ⬇ Unduh Semua Rules (Gabungan Seluruh Stasiun, .csv)
+  </a>
+</div>
+
+{% for stasiun, tabel in rules_terpilih_html.items() %}
+  <div class="card-panel">
+    <h3>{{ stasiun }}</h3>
+    <div class="table-wrap">{{ tabel | safe }}</div>
+    <div class="download-row">
+      <a href="{{ url_for('download_dataset', stasiun=stasiun) }}" class="btn-download">
+        ⬇ Unduh Dataset Bersih ({{ stasiun.split(' ')[0] }}.csv)
+      </a>
+    </div>
+  </div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Visualisasi & EDA{% endblock %}
+
+{% block content %}
+<style>
+  .plain-section-title {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 19px;
+    color: #0f1e1c;
+    margin: 32px 0 4px;
+  }
+</style>
+
+<div class="page-eyebrow">Langkah 02</div>
+<h1 class="page-title">Visualisasi &amp; EDA per Stasiun</h1>
+<p class="subtitle" style="max-width:700px; margin-bottom:20px;">
+  Pilih salah satu stasiun pemantauan di bawah. Grafik-grafiknya disusun berurutan:
+  komposisi kategori, perbandingan polutan, tren harian, perbandingan antar tahun,
+  sampai kaitannya dengan cuaca.
+</p>
+
+<!-- ============================================================ -->
+<!-- PILIH STASIUN                                                 -->
+<!-- ============================================================ -->
+
+<div class="station-tabs">
+  {% for stasiun in daftar_stasiun %}
+    <a href="{{ url_for('eda', stasiun=stasiun) }}"
+       class="station-tab {{ 'active' if stasiun == stasiun_dipilih else '' }}">
+      {{ stasiun }}
+    </a>
+  {% endfor %}
+</div>
+
+<div class="chip-row mb-4">
+  <span class="chip good">{{ stasiun_dipilih }}</span>
+  <span class="chip">{{ jumlah_baris }} hari data tercatat</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. KOMPOSISI KATEGORI KUALITAS UDARA                          -->
+<!-- ============================================================ -->
+
+{% if gambar_distribusi_kategori_stasiun %}
+<div class="card-panel">
+  <h2>Sebaran Kategori Kualitas Udara</h2>
+  <p class="subtitle">Jumlah hari yang jatuh ke tiap kategori resmi ISPU di stasiun ini.</p>
+  {{ gambar_distribusi_kategori_stasiun | safe }}
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- 2. POLUTAN PALING TINGGI                                      -->
+<!-- ============================================================ -->
+
+{% if profil_polutan_stasiun %}
+<div class="card-panel">
+  <h2>Perbandingan Polutan terhadap Ambang Batas Aman</h2>
+  <p class="subtitle">
+    Rata-rata tiap polutan selama periode data, beserta kategori ISPU-nya (Baik/Sedang/dst) dan
+    batas aman untuk kategori Baik. Kalau nilainya sudah melewati batas itu, kategorinya naik.
+  </p>
+  <div class="overview-grid">
+    {% for p in profil_polutan_stasiun %}
+    <div class="station-card" style="--station-color:{{ p.warna }};">
+      <div class="station-name">{{ p.label }}</div>
+      <div class="station-value">
+        {{ p.nilai }}
+        <span style="font-size:12px; font-weight:700; color:{{ p.warna }}; margin-left:4px;">{{ p.kategori }}</span>
+      </div>
+      <div class="station-unit">{{ p.satuan }}</div>
+      <div class="text-muted" style="font-size:11.5px; margin-top:4px;">Batas aman (kategori Baik): ≤ {{ p.batas_baik }} {{ p.satuan }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- 3. TREN HARIAN                                                -->
+<!-- ============================================================ -->
+
+{% if gambar_tren_variabel_stasiun %}
+<div class="card-panel">
+  <h2>Tren Harian per Variabel</h2>
+  <p class="subtitle">
+    Pilih variabel yang ingin dilihat lewat dropdown di dalam grafik — misalnya PM2.5, PM10,
+    suhu, kelembapan, atau curah hujan.
+  </p>
+  {{ gambar_tren_variabel_stasiun | safe }}
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- 4. PERBANDINGAN ANTAR TAHUN                                   -->
+<!-- ============================================================ -->
+
+{% if gambar_perbandingan_tahunan_stasiun %}
+<div class="card-panel">
+  <h2>Perbandingan Kondisi Udara &amp; Cuaca Antar Tahun</h2>
+  <p class="subtitle">
+    Rata-rata tiap variabel per tahun (curah hujan dijumlah setahun, bukan dirata-rata).
+    Pilih variabelnya lewat dropdown di dalam grafik.
+  </p>
+  {{ gambar_perbandingan_tahunan_stasiun | safe }}
+</div>
+{% endif %}
+
+{% if kpi_cuaca_stasiun %}
+<div class="card-panel">
+  <h2>Kondisi Cuaca di Stasiun Ini</h2>
+  <p class="subtitle">Rata-rata parameter cuaca selama periode data direkam.</p>
+  <div class="overview-grid">
+    {% for c in kpi_cuaca_stasiun %}
+    <div class="station-card" style="--station-color:{{ c.warna }};">
+      <div class="station-name">{{ c.ikon }} {{ c.label }}</div>
+      <div class="station-value">{{ c.nilai }}</div>
+      <div class="station-unit">{{ c.satuan }}</div>
+      {% if c.keterangan %}<div class="text-muted" style="font-size:11.5px; margin-top:4px;">{{ c.keterangan }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card-panel" style="background:#10151f; border:none;">
+  <h3 style="color:#fff;">Lanjut ke Analisis Data</h3>
+  <p class="subtitle" style="color:#8792a8;">
+    Halaman berikutnya membahas sisi teknis pengolahan data — penanganan missing value,
+    deteksi &amp; penanganan outlier, transformasi kategori, sampai association rule mining (FP-Growth)
+    untuk melihat pola asosiasi meteorologi &amp; polutan secara formal.
+  </p>
+  <a href="{{ url_for('analisis') }}" class="btn btn-primary-custom">Lanjut ke Analisis Data →</a>
+</div>
+
+{% endblock %}

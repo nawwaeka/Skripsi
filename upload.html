@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Upload & Preview Data{% endblock %}
+
+{% block content %}
+<div class="page-eyebrow">Langkah 01</div>
+<h1 class="page-title">Upload &amp; Preview Data</h1>
+
+{% if not uploaded %}
+<div class="card-panel">
+  <h2>Form Upload File</h2>
+
+  <form id="uploadForm" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="dropzone">
+          <label for="file_ispu">Data Indeks Standar Pencemar Udara (ISPU)</label>
+          <input type="file" name="file_ispu" id="file_ispu" accept=".xls,.xlsx,.csv" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="dropzone">
+          <label for="file_meteo">Data Meteorologi</label>
+          <input type="file" name="file_meteo" id="file_meteo" accept=".xls,.xlsx,.csv" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <button type="submit" id="uploadSubmitBtn" class="btn-primary-custom">Unggah &amp; Proses Data →</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% if uploaded and not sudah_gabung %}
+  <div class="section-divider">
+    <span class="num">✓</span>
+    <span class="title">Preview Data Mentah (Belum Digabung)</span>
+    <span class="line"></span>
+  </div>
+
+  <div class="source-tabs" id="sourceTabs" style="margin-bottom:10px;">
+    <button type="button" class="station-tab active" data-sumber="ispu" onclick="gantiSumber('ispu')">📄 Data ISPU</button>
+    <button type="button" class="station-tab" data-sumber="meteo" onclick="gantiSumber('meteo')">🌤️ Data Meteorologi</button>
+  </div>
+
+  <div class="station-tabs" id="stationTabs">
+    {% for stasiun in daftar_stasiun %}
+      <button
+        type="button"
+        class="station-tab {{ 'active' if loop.first else '' }}"
+        data-stasiun="{{ stasiun }}"
+        onclick="loadPreview('{{ stasiun }}', 1)"
+      >{{ stasiun }}</button>
+    {% endfor %}
+  </div>
+
+  <div id="previewTableWrap" class="preview-table-wrap">
+    <div class="table-loading">Memuat data…</div>
+  </div>
+
+  <div class="card-panel" style="background:linear-gradient(120deg, var(--green-700), var(--blue-700)); border:none; margin-top:22px;">
+    <h3 style="color:#fff;">Gabungkan Data</h3>
+    <form id="gabungkanForm" action="{{ url_for('gabungkan') }}" method="post">
+      <button type="submit" id="gabungkanBtn" class="btn-primary-custom">Gabungkan Data →</button>
+    </form>
+  </div>
+
+{% elif sudah_gabung %}
+  <div class="section-divider">
+    <span class="num">✓</span>
+    <span class="title">Preview Data per Stasiun (Sudah Digabung)</span>
+    <span class="line"></span>
+  </div>
+
+  <div class="station-tabs" id="stationTabs">
+    {% for stasiun in daftar_stasiun %}
+      <button
+        type="button"
+        class="station-tab {{ 'active' if loop.first else '' }}"
+        data-stasiun="{{ stasiun }}"
+        onclick="loadPreview('{{ stasiun }}', 1)"
+      >{{ stasiun }}</button>
+    {% endfor %}
+  </div>
+
+  <div id="previewTableWrap" class="preview-table-wrap">
+    <div class="table-loading">Memuat data…</div>
+  </div>
+
+  <div class="card-panel" style="background:linear-gradient(120deg, var(--green-700), var(--blue-700)); border:none; margin-top:22px;">
+    <h3 style="color:#fff;">Lanjutkan ke Analisis</h3>
+    <a href="{{ url_for('eda') }}" class="btn-primary-custom">Lanjut ke Visualisasi &amp; EDA →</a>
+  </div>
+
+{% else %}
+  <div class="card-panel">
+    <div class="empty-state">
+      <div class="icon">📂</div>
+      <p><strong>Belum ada data.</strong><br>Unggah file ISPU dan Meteorologi di atas untuk melihat preview di sini.</p>
+    </div>
+  </div>
+{% endif %}
+
+<div class="upload-overlay" id="uploadOverlay">
+  <div class="upload-overlay-box">
+    <div class="spinner"></div>
+    <p id="uploadOverlayText">Membaca file…</p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script id="daftar-stasiun-data" type="application/json">{{ (daftar_stasiun or []) | tojson }}</script>
+<script id="sudah-gabung-data" type="application/json">{{ sudah_gabung | default(false) | tojson }}</script>
+<script>
+  const DAFTAR_STASIUN = JSON.parse(document.getElementById('daftar-stasiun-data').textContent);
+  const SUDAH_GABUNG = JSON.parse(document.getElementById('sudah-gabung-data').textContent);
+  let sumberAktif = 'ispu';
+
+  function gantiSumber(sumber) {
+    sumberAktif = sumber;
+    document.querySelectorAll('#sourceTabs .station-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.sumber === sumber);
+    });
+    const stasiunAktif = document.querySelector('#stationTabs .station-tab.active');
+    loadPreview(stasiunAktif ? stasiunAktif.dataset.stasiun : DAFTAR_STASIUN[0], 1);
+  }
+
+  function formatLabel(kolom) {
+    return kolom.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function kategoriBadge(nilai) {
+    const map = {
+      'BAIK': 'badge-baik',
+      'SEDANG': 'badge-sedang',
+      'TIDAK SEHAT': 'badge-tidaksehat',
+      'SANGAT TIDAK SEHAT': 'badge-sangattidaksehat',
+      'BERBAHAYA': 'badge-berbahaya',
+    };
+    const key = String(nilai).toUpperCase();
+    const cls = map[key] || 'badge-default';
+    return `<span class="badge-kategori ${cls}">${nilai}</span>`;
+  }
+
+  async function loadPreview(stasiun, page) {
+    document.querySelectorAll('.station-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.stasiun === stasiun);
+    });
+
+    const container = document.getElementById('previewTableWrap');
+    container.innerHTML = '<div class="table-loading">Memuat data…</div>';
+
+    try {
+      let url = `/api/preview/${encodeURIComponent(stasiun)}?page=${page}`;
+      if (!SUDAH_GABUNG) url += `&sumber=${sumberAktif}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.error) {
+        container.innerHTML = '<p class="text-muted fst-italic">Gagal memuat data.</p>';
+        return;
+      }
+      renderPreviewTable(data);
+    } catch (e) {
+      container.innerHTML = '<p class="text-muted fst-italic">Gagal memuat data. Coba lagi.</p>';
+    }
+  }
+
+  function renderPreviewTable(data) {
+    const container = document.getElementById('previewTableWrap');
+    const kategoriIdx = data.kolom.findIndex(k => k.toLowerCase() === 'kategori');
+
+    const thead = '<thead><tr>' +
+      data.kolom.map(k => `<th>${formatLabel(k)}</th>`).join('') +
+      '</tr></thead>';
+
+    const tbody = '<tbody>' + data.baris.map(row => {
+      const cells = row.map((val, i) => {
+        const display = (val === null || val === undefined || val === '') ? '-' : val;
+        if (i === kategoriIdx && display !== '-') return `<td>${kategoriBadge(display)}</td>`;
+        return `<td>${display}</td>`;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('') + '</tbody>';
+
+    const stasiunEsc = data.stasiun.replace(/'/g, "\\'");
+
+    container.innerHTML = `
+      <p class="subtitle" style="margin-bottom:12px;">
+        <strong>${data.stasiun}</strong> — ${data.total_rows} baris data tergabung (ISPU + Meteorologi harian)
+      </p>
+      <div class="table-wrap">
+        <table class="preview-table">${thead}${tbody}</table>
+      </div>
+      <div class="table-pagination">
+        <button class="pg-btn" onclick="loadPreview('${stasiunEsc}', ${data.page - 1})" ${data.page <= 1 ? 'disabled' : ''}>‹ Sebelumnya</button>
+        <span class="pg-info">Halaman ${data.page} / ${data.total_pages}</span>
+        <button class="pg-btn" onclick="loadPreview('${stasiunEsc}', ${data.page + 1})" ${data.page >= data.total_pages ? 'disabled' : ''}>Berikutnya ›</button>
+      </div>
+    `;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (DAFTAR_STASIUN.length > 0) {
+      loadPreview(DAFTAR_STASIUN[0], 1);
+    }
+
+    const form = document.getElementById('uploadForm');
+    if (form) {
+      form.addEventListener('submit', () => {
+        document.getElementById('uploadOverlayText').textContent = 'Membaca file…';
+        document.getElementById('uploadOverlay').classList.add('show');
+        document.getElementById('uploadSubmitBtn').disabled = true;
+      });
+    }
+
+    const formGabung = document.getElementById('gabungkanForm');
+    if (formGabung) {
+      formGabung.addEventListener('submit', () => {
+        document.getElementById('uploadOverlayText').textContent = 'Menggabungkan data…';
+        document.getElementById('uploadOverlay').classList.add('show');
+        document.getElementById('gabungkanBtn').disabled = true;
+      });
+    }
+  });
+</script>
+{% endblock %}

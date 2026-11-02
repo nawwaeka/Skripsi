@@ -1,0 +1,753 @@
+/* ============================================================
+   AIR QUALITY LAB — DESIGN TOKENS
+   Palet diturunkan dari logo Kementerian Lingkungan Hidup:
+   hijau tua daun, biru pita, oranye kelopak — diterjemahkan ke
+   tema terang: hijau muda + biru muda + putih, dengan aksen
+   cerah untuk elemen penting (badge kategori, tombol utama).
+   ============================================================ */
+
+:root {
+  /* -- hijau (leaf) -- */
+  --green-900: #0b4a3f;
+  --green-700: #0f6e5c;
+  --green-500: #17a673;
+  --green-400: #34d399;
+  --green-100: #e3faf0;
+  --green-50:  #f2fdf8;
+
+  /* -- biru (ribbon) -- */
+  --blue-700: #0e6fc9;
+  --blue-500: #2f9bf0;
+  --blue-400: #5fb8ff;
+  --blue-100: #e5f4ff;
+  --blue-50:  #f3fafe;
+
+  /* -- oranye (petal) — dipakai sangat sedikit, hanya highlight -- */
+  --orange-500: #f7931e;
+  --orange-100: #fff1de;
+
+  /* -- status ISPU -- */
+  --status-baik: #22c55e;
+  --status-sedang: #eab308;
+  --status-tidaksehat: #f97316;
+  --status-sangattidaksehat: #ef4444;
+  --status-berbahaya: #7f1d1d;
+
+  /* -- netral -- */
+  --white: #ffffff;
+  --ink-900: #0f1e1c;
+  --ink-700: #33453f;
+  --ink-500: #5c7168;
+  --ink-300: #9db3ab;
+  --line: #dcece5;
+  --bg-page: #f5faf8;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 10px 30px -14px rgba(15, 110, 92, 0.25);
+  --shadow-card: 0 1px 2px rgba(15, 30, 28, 0.04), 0 8px 24px -12px rgba(15, 110, 92, 0.12);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg-page);
+  color: var(--ink-900);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ============================================================
+   SHELL LAYOUT
+   ============================================================ */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---------------- Sidebar ---------------- */
+
+.sidebar {
+  width: 264px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--green-900) 0%, var(--green-700) 100%);
+  color: var(--white);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 20px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-soft);
+}
+
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--white);
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--green-100);
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.nav-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.72);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.nav-step:hover:not(.disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--white);
+}
+
+.nav-step.active {
+  background: var(--white);
+  color: var(--green-900);
+  box-shadow: var(--shadow-soft);
+}
+
+.nav-step.active .step-num {
+  background: var(--green-500);
+  color: var(--white);
+}
+
+.nav-step.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--white);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.reset-form {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.btn-reset {
+  width: 100%;
+  padding: 11px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--white);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-reset:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ---------------- Main content ---------------- */
+
+.main-content {
+  flex: 1;
+  padding: 36px 44px 60px;
+  max-width: 1180px;
+}
+
+.flash-wrap { margin-bottom: 4px; }
+
+.alert {
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  padding: 14px 18px;
+}
+
+.alert-success { background: var(--green-100); color: var(--green-900); }
+.alert-danger  { background: #fde2e2; color: #7f1d1d; }
+.alert-warning { background: var(--orange-100); color: #7c4a03; }
+.alert-info    { background: var(--blue-100); color: var(--blue-700); }
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+
+.page-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--green-500);
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0 0 10px;
+}
+
+.page-desc {
+  font-size: 14.5px;
+  color: var(--ink-500);
+  max-width: 700px;
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+
+/* ============================================================
+   CARD PANEL
+   ============================================================ */
+
+.card-panel {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  margin-bottom: 22px;
+  box-shadow: var(--shadow-card);
+}
+
+.card-panel h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--ink-900);
+}
+
+.card-panel h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--green-700);
+}
+
+.subtitle {
+  font-size: 13.5px;
+  color: var(--ink-500);
+  margin: 0 0 18px;
+}
+
+/* Dipakai di banyak tempat (eda.html, output.html, df_to_html_table di
+   app.py) sebagai keterangan kecil bernada sekunder -- sebelumnya class
+   ini TIDAK terdefinisi sama sekali, jadi teksnya jatuh ke warna default
+   yang di-inherit dari body (--ink-900, hampir hitam) alih-alih warna
+   muted/abu-abu yang dimaksud. */
+.text-muted {
+  color: var(--ink-500);
+}
+
+.fst-italic {
+  font-style: italic;
+}
+
+/* ============================================================
+   FORM / DROPZONE
+   ============================================================ */
+
+.dropzone {
+  border: 1.5px dashed var(--green-400);
+  background: var(--green-50);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  height: 100%;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dropzone:nth-child(1) { }
+
+.row.g-3 > .col-md-6:nth-child(2) .dropzone {
+  border-color: var(--blue-400);
+  background: var(--blue-50);
+}
+
+.dropzone label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-700);
+  margin-bottom: 10px;
+}
+
+.dropzone input[type="file"] {
+  width: 100%;
+  font-size: 13px;
+  color: var(--ink-500);
+}
+
+.btn-primary-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, var(--green-500), var(--blue-500));
+  color: var(--white);
+  border: none;
+  padding: 13px 26px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -8px rgba(23, 166, 115, 0.55);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px -10px rgba(23, 166, 115, 0.6);
+  color: var(--white);
+}
+
+.btn-primary-custom:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================================
+   SECTION DIVIDER
+   ============================================================ */
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 16px;
+}
+
+.section-divider .num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--green-500);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.section-divider .title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink-900);
+  white-space: nowrap;
+}
+
+.section-divider .line {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ============================================================
+   CHIPS (dipakai di halaman lain / ringkasan stasiun)
+   ============================================================ */
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--ink-300);
+  color: var(--white);
+}
+
+.chip.accent {
+  background: var(--blue-100);
+  color: var(--blue-700);
+  border: 1px solid var(--blue-400);
+}
+
+.chip.good {
+  background: var(--green-100);
+  color: var(--green-700);
+  border: 1px solid var(--green-400);
+}
+
+.text-success {
+  color: var(--green-700) !important;
+}
+
+/* ============================================================
+   STATION TABS + PAGINATED PREVIEW TABLE
+   ============================================================ */
+
+.station-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.station-tab {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--white);
+  color: var(--ink-500);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.station-tab:hover {
+  border-color: var(--green-400);
+  color: var(--green-700);
+}
+
+.station-tab.active {
+  background: linear-gradient(90deg, var(--green-500), var(--blue-500));
+  border-color: transparent;
+  color: var(--white);
+  box-shadow: 0 8px 18px -10px rgba(23, 166, 115, 0.55);
+}
+
+.station-select {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--line);
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c7168' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+  color: var(--ink-700);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  margin-bottom: 18px;
+  transition: border-color 0.15s ease;
+}
+
+.station-select:hover,
+.station-select:focus {
+  border-color: var(--green-400);
+  outline: none;
+}
+
+.preview-table-wrap {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.table-loading {
+  padding: 40px 0;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink-500);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+}
+
+table.preview-table,
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+table.preview-table thead th,
+.table-wrap thead th {
+  background: var(--green-50);
+  color: var(--green-900);
+  font-weight: 700;
+  text-align: left;
+  padding: 10px 12px;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--green-100);
+  position: sticky;
+  top: 0;
+}
+
+table.preview-table tbody td,
+.table-wrap tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-700);
+  white-space: nowrap;
+}
+
+table.preview-table tbody tr:nth-child(even),
+.table-wrap tbody tr:nth-child(even) {
+  background: var(--green-50);
+}
+
+table.preview-table tbody tr:hover,
+.table-wrap tbody tr:hover {
+  background: var(--blue-50);
+}
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.pg-btn {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--green-400);
+  background: var(--green-50);
+  color: var(--green-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pg-btn:hover:not(:disabled) {
+  background: var(--green-500);
+  color: var(--white);
+}
+
+.pg-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--line);
+  background: var(--white);
+  color: var(--ink-300);
+}
+
+.pg-info {
+  font-size: 12.5px;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+}
+
+/* ---------------- Badge kategori ISPU (highlight cerah) ---------------- */
+
+.badge-kategori {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--white);
+  white-space: nowrap;
+}
+
+.badge-baik              { background: var(--status-baik); }
+.badge-sedang            { background: var(--status-sedang); color: #3f2d00; }
+.badge-tidaksehat        { background: var(--status-tidaksehat); }
+.badge-sangattidaksehat  { background: var(--status-sangattidaksehat); }
+.badge-berbahaya         { background: var(--status-berbahaya); }
+.badge-default           { background: var(--ink-300); }
+
+/* ============================================================
+   KARTU RINGKASAN STASIUN (overview seluruh stasiun DKI Jakarta,
+   dipakai di halaman EDA — didesain untuk cepat dibaca orang awam)
+   ============================================================ */
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+.station-card {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  background: var(--white);
+  border-left: 5px solid var(--station-color, var(--ink-300));
+}
+
+.station-card .station-name {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.station-card .station-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: 2px;
+}
+
+.station-card .station-unit {
+  font-size: 11.5px;
+  color: var(--ink-500);
+  margin-bottom: 10px;
+}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--ink-500);
+}
+
+.empty-state .icon {
+  font-size: 38px;
+  margin-bottom: 10px;
+}
+
+/* ============================================================
+   UPLOAD OVERLAY (feedback instan saat submit)
+   ============================================================ */
+
+.upload-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 30, 28, 0.55);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.upload-overlay.show { display: flex; }
+
+.upload-overlay-box {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 32px 40px;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.upload-overlay-box p {
+  margin: 14px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green-900);
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3.5px solid var(--green-100);
+  border-top-color: var(--green-500);
+  margin: 0 auto;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .app-shell { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+  }
+  .brand { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .nav-steps { flex-direction: row; }
+  .reset-form { margin-top: 0; padding-top: 0; margin-left: 10px; }
+  .main-content { padding: 24px 18px 40px; }
+  .page-title { font-size: 24px; }
+}

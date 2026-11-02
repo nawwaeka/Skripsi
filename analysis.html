@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}Analisis Data{% endblock %}
+
+{% block content %}
+<div class="page-eyebrow">Langkah 03</div>
+<h1 class="page-title">Analisis Data</h1>
+
+{% if not sudah_dijalankan %}
+<p class="page-desc">
+  Sebelum pipeline dijalankan, berikut ringkasan teknis kondisi data mentah untuk seluruh stasiun:
+  sebaran missing value dan screening outlier. Tinjau dulu, lalu klik
+  <strong>ANALISIS SEKARANG</strong> untuk menjalankan
+  penanganan missing value, deteksi &amp; penanganan outlier, transformasi/diskritisasi, hingga
+  pembentukan aturan asosiasi (FP-Growth).
+</p>
+
+<div class="section-divider">
+  <span class="num">1</span>
+  <span class="title">Sebaran Missing Value</span>
+  <span class="line"></span>
+</div>
+<div class="card-panel">
+  <p class="subtitle">Kolom dengan nilai hilang di tiap stasiun, beserta jumlahnya, sebelum ditangani.</p>
+  <div class="table-wrap">{{ tabel_missing_praanalisis_html | safe }}</div>
+</div>
+
+{% if gambar_missing_praanalisis %}
+<div class="card-panel">
+  <h3>Visualisasi Posisi Missing Value per Stasiun</h3>
+  <p class="subtitle">Garis putus merah menandai titik waktu yang datanya hilang, untuk tiap kolom yang punya missing value.</p>
+
+  <select class="station-select" onchange="pilihStasiun('missing', this.value)">
+    <option value="" selected disabled hidden>— Pilih stasiun —</option>
+    {% for stasiun in daftar_stasiun %}
+      <option value="{{ loop.index0 }}">{{ stasiun }}</option>
+    {% endfor %}
+  </select>
+
+  <p class="text-muted fst-italic stasiun-placeholder" data-group="missing" style="text-align:center; padding:30px 0;">Pilih stasiun di atas untuk menampilkan grafiknya.</p>
+
+  {% for stasiun in daftar_stasiun %}
+    {% set gambar = gambar_missing_praanalisis.get(stasiun) %}
+    <div class="stasiun-panel" data-group="missing" data-index="{{ loop.index0 }}" style="display:none;">
+      {% if gambar %}
+        {{ gambar | safe }}
+      {% else %}
+        <p class="text-muted fst-italic" style="text-align:center; padding:30px 0;">Tidak ada missing value di stasiun ini.</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="section-divider">
+  <span class="num">2</span>
+  <span class="title">Screening &amp; Distribusi Outlier</span>
+  <span class="line"></span>
+</div>
+
+{% if gambar_outlier_praanalisis %}
+<div class="card-panel">
+  <h3>Screening Outlier Tiap Parameter per Stasiun</h3>
+  <p class="subtitle">
+    Nilai tiap parameter sepanjang waktu, dengan titik merah menandai nilai yang berada di luar
+    ambang domain (batas fisis) — misalnya kelembaban di atas 100% atau suhu di luar rentang wajar.
+    Tiap parameter punya sumbu-Y sendiri karena satuannya berbeda-beda.
+  </p>
+
+  <select class="station-select" onchange="pilihStasiun('outlier', this.value)">
+    <option value="" selected disabled hidden>— Pilih stasiun —</option>
+    {% for stasiun in daftar_stasiun %}
+      <option value="{{ loop.index0 }}">{{ stasiun }}</option>
+    {% endfor %}
+  </select>
+
+  <p class="text-muted fst-italic stasiun-placeholder" data-group="outlier" style="text-align:center; padding:30px 0;">Pilih stasiun di atas untuk menampilkan grafiknya.</p>
+
+  {% for stasiun in daftar_stasiun %}
+    {% set gambar = gambar_outlier_praanalisis.get(stasiun) %}
+    <div class="stasiun-panel" data-group="outlier" data-index="{{ loop.index0 }}" style="display:none;">
+      {% if gambar %}
+        {{ gambar | safe }}
+      {% else %}
+        <p class="text-muted fst-italic" style="text-align:center; padding:30px 0;">Data tidak tersedia.</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-panel" style="background:linear-gradient(135deg, var(--green-900), var(--blue-700)); border:none; text-align:center;">
+  <h3 style="color:#fff;">Siap Menjalankan Analisis?</h3>
+  <p class="subtitle" style="color:#8792a8;">
+    Klik tombol di bawah untuk menjalankan seluruh pipeline: penanganan missing value, deteksi &amp;
+    penanganan outlier, transformasi/diskritisasi, hingga association rule mining (FP-Growth).
+  </p>
+  <form method="POST" action="{{ url_for('jalankan_analisis') }}">
+    <button type="submit" class="btn btn-primary-custom">ANALISIS SEKARANG</button>
+  </form>
+</div>
+
+{% else %}
+<p class="page-desc">
+  Ringkasan tahapan pemrosesan: penanganan data (duplikasi, missing value, outlier), kategorisasi
+  parameter, hingga pembentukan aturan asosiasi (FP-Growth).
+</p>
+
+<!-- ===================== TAHAP 1 — PREPROCESSING ===================== -->
+<div class="section-divider">
+  <span class="num">1</span>
+  <span class="title">Penanganan Data (Preprocessing)</span>
+  <span class="line"></span>
+</div>
+
+<div class="card-panel">
+  <h3>Duplikasi Data <span class="step-badge">Selesai</span></h3>
+  <p class="subtitle">Baris dengan tanggal (periode) ganda pada stasiun yang sama dibuang, hanya kemunculan pertama yang dipertahankan.</p>
+  <div class="table-wrap">{{ tabel_duplikasi_html | safe }}</div>
+</div>
+
+<div class="card-panel">
+  <h3>Missing Value <span class="step-badge">Selesai</span></h3>
+  <p class="subtitle">Jumlah nilai kosong per stasiun sebelum dan sesudah penanganan (zero→NaN pada kolom gas + interpolasi/imputasi).</p>
+  <div class="table-wrap">{{ tabel_missing_html | safe }}</div>
+</div>
+
+<div class="card-panel">
+  <h3>Outlier <span class="step-badge">Selesai</span></h3>
+  <p class="subtitle">Jumlah nilai yang terdeteksi sebagai outlier (ambang domain + Isolation Forest) sebelum dan sesudah ditangani.</p>
+  <div class="table-wrap">{{ tabel_outlier_html | safe }}</div>
+</div>
+
+<!-- ===================== TAHAP 2 — KATEGORISASI ===================== -->
+<div class="section-divider">
+  <span class="num">2</span>
+  <span class="title">Transformasi / Diskritisasi</span>
+  <span class="line"></span>
+</div>
+<div class="card-panel">
+  <h2>Kategorisasi Tiap Parameter <span class="step-badge">Selesai</span></h2>
+  <p class="subtitle">
+    Parameter numerik diubah jadi kategori: ISPU (Baik/Sedang/Tidak Sehat/Sangat Tidak Sehat/Berbahaya),
+    suhu, kelembaban, kecepatan angin (skala Beaufort), dan curah hujan.
+    Contoh hasil — {{ stasiun_contoh }}:
+  </p>
+  <div class="table-wrap">{{ preview_transformasi_html | safe }}</div>
+</div>
+
+<!-- ===================== TAHAP 3 — FP-GROWTH (RINGKAS) ===================== -->
+<div class="section-divider">
+  <span class="num">3</span>
+  <span class="title">Association Rule Mining (FP-Growth)</span>
+  <span class="line"></span>
+</div>
+
+<div class="card-panel">
+  <h3>Pembentukan Transaksi</h3>
+  <p class="subtitle">
+    Tiap baris (1 hari, 1 stasiun) diubah jadi satu "transaksi" berisi kombinasi kategori. Contoh:
+  </p>
+  <div class="table-wrap">{{ tabel_transaksi_html | safe }}</div>
+</div>
+
+<div class="card-panel">
+  <p class="subtitle" style="margin:0;">
+    Dari transaksi ini, itemset &amp; aturan asosiasi diuji pada beberapa skenario minimum
+    support &amp; minimum confidence. Rule yang dipertahankan hanya yang memprediksi kategori
+    ISPU dari kondisi cuaca/polutan lain, dengan korelasi valid (lift &gt; 1).
+  </p>
+</div>
+
+<div class="card-panel" style="background:#f8f9fc; border:1px solid #e4e8f0;">
+  <h3>Kombinasi Terpilih</h3>
+  {% if support_final is not none %}
+    <p style="margin:0; font-family: 'JetBrains Mono', monospace; font-size:13px;">
+      ✓ <strong>min_support = {{ support_final }}</strong>,
+      <strong>min_confidence = {{ confidence_final }}</strong>
+      <br><span style="color:#8792a8; font-size:11.5px;">
+        (kombinasi tertinggi yang masih menghasilkan rule valid di SEMUA stasiun)
+      </span>
+    </p>
+  {% else %}
+    <p style="margin:0; color:#e2543a;">
+      ⚠ Tidak ada kombinasi support/confidence yang menghasilkan rule di semua stasiun sekaligus.
+      Pertimbangkan menurunkan ambang minimum.
+    </p>
+  {% endif %}
+</div>
+
+{% if support_final is not none %}
+<div class="card-panel">
+  <h3>Rules Final pada Kombinasi Terpilih</h3>
+  {% for stasiun, tabel in rules_terpilih_html.items() %}
+    <p style="font-weight:600; font-size:13px; margin-top:16px; margin-bottom:6px;">{{ stasiun }}</p>
+    <div class="table-wrap">{{ tabel | safe }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card-panel" style="background:linear-gradient(135deg, var(--green-900), var(--blue-700)); border:none;">
+  <h3 style="color:#fff;">Lihat Hasil Akhir</h3>
+  <p class="subtitle" style="color:#8792a8;">
+    Lanjut ke halaman Output Program untuk melihat ringkasan rule terpilih dan mengunduh hasilnya.
+  </p>
+  <a href="{{ url_for('output') }}" class="btn btn-primary-custom">Lanjut ke Output Program →</a>
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Dropdown pemilih stasiun untuk kartu Missing Value / Outlier di halaman
+  // Analisis Data. Chart yang dirender saat panel-nya masih `display:none`
+  // kena lebar 0 di Plotly, jadi begitu panel dipilih & dimunculkan, semua
+  // chart di dalamnya di-resize ulang supaya tampil normal.
+  function pilihStasiun(group, index) {
+    var placeholder = document.querySelector('.stasiun-placeholder[data-group="' + group + '"]');
+    if (placeholder) placeholder.style.display = 'none';
+    document.querySelectorAll('.stasiun-panel[data-group="' + group + '"]').forEach(function (panel) {
+      if (panel.dataset.index === String(index)) {
+        panel.style.display = '';
+        panel.querySelectorAll('.js-plotly-plot').forEach(function (gd) {
+          Plotly.Plots.resize(gd);
+        });
+      } else {
+        panel.style.display = 'none';
+      }
+    });
+  }
+</script>
+{% endblock %}
